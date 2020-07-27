@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Application.Commands;
 using Application.Queries;
 using Application.ViewModels;
-using Domain;
-using ErrorStorer.CsvMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,14 +29,18 @@ namespace ErrorStorer.Controllers
         {
             var command = new CreateTicketCommand(ticket.Title, ticket.Description, ticket.TicketNumber, ticket.Type, ticket.Status, null);
 
-            using (var memoryStream = new MemoryStream())
+            //Should be logic in the domain
+            if (ticket.Files != null)
             {
-                await ticket.Files.CopyToAsync(memoryStream);
-                command.FileBytes = memoryStream.ToArray();
+                using (var memoryStream = new MemoryStream())
+                {
+                    await ticket.Files.CopyToAsync(memoryStream);
+                    command.FileBytes = memoryStream.ToArray();
+                }
             }
 
-            var result = await _mediator.Send(command);
-            return View();
+            await _mediator.Send(command);
+            return Ok();
         }
 
         public IActionResult Create()
@@ -57,14 +58,6 @@ namespace ErrorStorer.Controllers
         {
             var result = await _mediator.Send(new GetSingleTicketQuery(ticketId));
             return View(result);
-        }
-
-        public async void ExportToExcel()
-        {
-            var result = await _mediator.Send(new GetAllTicketQuery());
-            var csvExporter = new CsvConverter();
-            csvExporter.Main(result.ToList());
-            
         }
     }
 }

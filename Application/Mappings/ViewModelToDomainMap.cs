@@ -1,4 +1,5 @@
 ﻿using Application.ViewModels;
+using Application.ViewModels.Enums;
 using AutoMapper;
 using Domain;
 using System;
